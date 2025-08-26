@@ -175,6 +175,47 @@ Note: Not all ffmpeg decoders or filters support HW acceleration. In this case s
 11. Widget `QAVWidget_OpenGL` could be used to render to OpenGL. See [examples/widget_video_opengl](examples/widget_video_opengl)
 12. Qt 5.12 - **6**.x is supported
 
+## FFmpeg option mapping
+
+`QAVPlayer` forwards option keys and values directly to FFmpeg. Every FFmpeg
+command-line switch therefore has an equivalent dictionary entry or method
+call. Some common examples are listed below:
+
+| FFmpeg CLI                 | QAVPlayer call                                                  |
+|---------------------------|-----------------------------------------------------------------|
+| `-user_agent QTAV`        | `player.setInputOptions({{"user_agent", "QTAV"}});`            |
+| `-rtsp_transport tcp`     | `player.setInputOptions({{"rtsp_transport", "tcp"}});`         |
+| `-vcodec h264`            | `player.setInputVideoCodec("h264");`                           |
+| `-threads 2`              | `player.setVideoCodecOptions({{"threads", "2"}});`             |
+| `-flags2 +fast`           | `player.setVideoCodecOptions({{"flags2", "+fast"}});`         |
+| `-profile:v high`         | `player.setVideoCodecOptions({{"profile", "high"}});`         |
+| *any other option*        | use the same key with the appropriate method                    |
+
+The snippet below demonstrates combining several options in code:
+
+```cpp
+#include <QtAVPlayer/QAVPlayer>
+
+QAVPlayer player;
+
+// Options for avformat_open_input (same as FFmpeg CLI input options)
+player.setInputOptions({
+    {"user_agent", "QtAVPlayer"},
+    {"rtsp_transport", "tcp"}
+});
+
+// Select a specific decoder (equivalent to -vcodec / -codec:v)
+player.setInputVideoCodec("h264");
+
+// Decoder options passed to avcodec_open2 (names match FFmpeg)
+player.setVideoCodecOptions({
+    {"threads", "2"},
+    {"refcounted_frames", "1"}
+});
+```
+
+See the FFmpeg documentation for the complete list of parameters.
+
 # How to build
 
 QtAVPlayer should be directly bundled into an app.
