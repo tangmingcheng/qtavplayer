@@ -175,6 +175,33 @@ Note: Not all ffmpeg decoders or filters support HW acceleration. In this case s
 11. Widget `QAVWidget_OpenGL` could be used to render to OpenGL. See [examples/widget_video_opengl](examples/widget_video_opengl)
 12. Qt 5.12 - **6**.x is supported
 
+## FFmpeg option example
+
+The following snippet shows how to pass FFmpeg parameters through `QAVPlayer`:
+
+```cpp
+#include <QtAVPlayer/QAVPlayer>
+
+QAVPlayer player;
+
+// Options for avformat_open_input (same as FFmpeg CLI input options)
+player.setInputOptions({
+    {"user_agent", "QtAVPlayer"},
+    {"rtsp_transport", "tcp"}
+});
+
+// Select a specific decoder (equivalent to -vcodec / -codec:v)
+player.setInputVideoCodec("h264");
+
+// Decoder options passed to avcodec_open2 (names match FFmpeg)
+player.setVideoCodecOptions({
+    {"threads", "2"},
+    {"refcounted_frames", "1"}
+});
+```
+
+See the FFmpeg documentation for all available parameters.
+
 # How to build
 
 QtAVPlayer should be directly bundled into an app.
