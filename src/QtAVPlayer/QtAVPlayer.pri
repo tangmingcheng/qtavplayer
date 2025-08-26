@@ -112,6 +112,11 @@ contains(DEFINES, QT_AVPLAYER_VDPAU) {
     SOURCES += $$PWD/qavhwdevice_vdpau.cpp
 }
 
+contains(DEFINES, QT_AVPLAYER_RKMPP) {
+    PRIVATE_HEADERS += $$PWD/qavhwdevice_rkmpp_p.h
+    SOURCES += $$PWD/qavhwdevice_rkmpp.cpp
+}
+
 macos|darwin {
     PRIVATE_HEADERS += $$PWD/qavhwdevice_videotoolbox_p.h
     SOURCES += $$PWD/qavhwdevice_videotoolbox.mm

@@ -6,6 +6,7 @@ option(QT_AVPLAYER_MULTIMEDIA "Enable QtMultimedia" OFF)
 option(QT_AVPLAYER_VA_X11 "Enable libva-x11" OFF)
 option(QT_AVPLAYER_VA_DRM "Enable libva-drm" OFF)
 option(QT_AVPLAYER_VDPAU "Enable vdpau" OFF)
+option(QT_AVPLAYER_RKMPP "Enable rkmpp" OFF)
 option(QT_AVPLAYER_WIDGET_OPENGL "Enable widget opengl" OFF)
 
 find_library(AVDEVICE_LIBRARY REQUIRED NAMES avdevice)
@@ -254,6 +255,21 @@ if(QT_AVPLAYER_VDPAU)
     set(QtAVPlayer_SOURCES
         ${QtAVPlayer_SOURCES}
         ${QT_AVPLAYER_DIR}/qavhwdevice_vdpau.cpp
+    )
+endif()
+
+if(QT_AVPLAYER_RKMPP)
+    message(STATUS "QT_AVPLAYER_RKMPP is defined")
+    add_definitions(-DQT_AVPLAYER_RKMPP)
+
+    set(QtAVPlayer_PRIVATE_HEADERS
+        ${QtAVPlayer_PRIVATE_HEADERS}
+        ${QT_AVPLAYER_DIR}/qavhwdevice_rkmpp_p.h
+    )
+
+    set(QtAVPlayer_SOURCES
+        ${QtAVPlayer_SOURCES}
+        ${QT_AVPLAYER_DIR}/qavhwdevice_rkmpp.cpp
     )
 endif()
 

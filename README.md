@@ -163,11 +163,13 @@ Free and open-source Qt Media Player library based on FFmpeg.
 9. HW accelerations:
 
    QT_AVPLAYER_NO_HWDEVICE can be used to force using software decoding. The video codec is negotiated automatically.
+   QT_AVPLAYER_HWDEVICE can be set (e.g. `QT_AVPLAYER_HWDEVICE=rkmpp`) to request a specific HW backend.
    
-  * `VA-API` and `VDPAU` for Linux: the frames are returned with OpenGL textures.
-  * `Video Toolbox` for macOS and iOS: the frames are returned with Metal Textures.
-  * `D3D11` for Windows: the frames are returned with D3D11Texture2D textures. 
-  * `MediaCodec` for Android: the frames are returned with OpenGL textures.
+ * `VA-API` and `VDPAU` for Linux: the frames are returned with OpenGL textures.
+ * `Video Toolbox` for macOS and iOS: the frames are returned with Metal Textures.
+ * `D3D11` for Windows: the frames are returned with D3D11Texture2D textures.
+ * `MediaCodec` for Android: the frames are returned with OpenGL textures.
+ * `RKMPP` for Rockchip: the frames are returned with DRM PRIME descriptors.
 
 Note: Not all ffmpeg decoders or filters support HW acceleration. In this case software decoders are used.
 
@@ -183,6 +185,7 @@ Some defines should be provided to opt some features.
 * `QT_AVPLAYER_VA_X11` - enables support of `libva-x11` for HW acceleration. For linux only.
 * `QT_AVPLAYER_VA_DRM` - enables support of `libva-drm` for HW acceleration. For linux only.
 * `QT_AVPLAYER_VDPAU` - enables support of `libvdpau` for HW acceleration. For linux only.
+* `QT_AVPLAYER_RKMPP` - enables support of `rkmpp` for hardware acceleration. For Rockchip devices.
 * `QT_AVPLAYER_WIDGET_OPENGL` - builds the widget based on opengl.
 
 ## QMake
