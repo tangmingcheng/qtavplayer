@@ -618,8 +618,9 @@ void QAVPlayerPrivate::doDemux()
             }
         }
 
-        auto packet = demuxer.read();
-        if (packet.stream()) {
+        QAVPacket packet;
+        int ret = demuxer.read(packet);
+        if (ret >= 0 && packet.stream()) {
             muxer.write(packet);
             endOfFile(false);
             // Empty packet points to EOF and it needs to flush codecs
@@ -636,7 +637,7 @@ void QAVPlayerPrivate::doDemux()
                 default:
                     break;
             }
-        } else {
+        } else if (ret == AVERROR_EOF) {
             if (demuxer.eof()
                 && videoQueue.isEmpty()
                 && audioQueue.isEmpty()
@@ -655,6 +656,9 @@ void QAVPlayerPrivate::doDemux()
 
             QMutexLocker locker(&waiterMutex);
             waiter.wait(&waiterMutex, 10);
+        } else if (ret < 0) {
+            setError(QAVPlayer::ResourceError, QLatin1String("av_read_frame: unexpected result: ") + err_str(ret));
+            return;
         }
     }
     qCDebug(lcAVPlayer) << __FUNCTION__ << "finished";
