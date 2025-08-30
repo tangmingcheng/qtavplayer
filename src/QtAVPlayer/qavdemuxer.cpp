@@ -669,19 +669,19 @@ bool QAVDemuxer::eof() const
     return d->eof;
 }
 
-QAVPacket QAVDemuxer::read()
+int QAVDemuxer::read(QAVPacket &pkt)
 {
     Q_D(QAVDemuxer);
     {
         QMutexLocker locker(&d->mutex);
-        if (!d->packets.isEmpty())
-            return d->packets.takeFirst();
-
+        if (!d->packets.isEmpty()) {
+            pkt = d->packets.takeFirst();
+            return 0;
+        }
         if (!d->ctx || d->eof)
-            return {};
+            return AVERROR_EOF;
     }
 
-    QAVPacket pkt;
     bool eof = false;
     int ret = av_read_frame(d->ctx, pkt.packet());
     if (ret < 0) {
@@ -689,27 +689,43 @@ QAVPacket QAVDemuxer::read()
             eof = true;
         } else {
             qDebug() << "av_read_frame: unexpected result:" << ret;
-            return {};
         }
+        {
+            QMutexLocker locker(&d->mutex);
+            d->eof = eof;
+        }
+        return ret;
     }
+
     {
         QMutexLocker locker(&d->mutex);
         d->eof = eof;
         if (pkt.packet()->stream_index < d->availableStreams.size())
             pkt.setStream(d->availableStreams[pkt.packet()->stream_index]);
         if (d->bsf_ctx) {
-            ret = av_bsf_send_packet(d->bsf_ctx, d->eof ? NULL : pkt.packet());
-            if (ret >= 0) {
-                while ((ret = av_bsf_receive_packet(d->bsf_ctx, pkt.packet())) >= 0)
+            int filterRet = av_bsf_send_packet(d->bsf_ctx, pkt.packet());
+            if (filterRet >= 0) {
+                while ((filterRet = av_bsf_receive_packet(d->bsf_ctx, pkt.packet())) >= 0)
                     d->packets.append(pkt);
             }
-            if (ret < 0 && ret != AVERROR_EOF && ret != AVERROR(EAGAIN)) {
-                qWarning() << "Error applying bitstream filters to an output:" << ret;
-                return {};
+            if (filterRet < 0 && filterRet != AVERROR_EOF && filterRet != AVERROR(EAGAIN)) {
+                qWarning() << "Error applying bitstream filters to an output:" << filterRet;
+                return filterRet;
             }
-            return !d->packets.isEmpty() ? d->packets.takeFirst() : QAVPacket{};
+            if (!d->packets.isEmpty()) {
+                pkt = d->packets.takeFirst();
+                return 0;
+            }
+            return filterRet;
         }
     }
+    return 0;
+}
+
+QAVPacket QAVDemuxer::read()
+{
+    QAVPacket pkt;
+    read(pkt);
     return pkt;
 }
 
