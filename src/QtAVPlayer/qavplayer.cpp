@@ -22,6 +22,7 @@
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <QLoggingCategory>
 #include <functional>
+#include <atomic>
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -158,6 +159,7 @@ public:
     QWaitCondition waitCond;
     bool eof = false;
     std::atomic_bool startDemuxing {false};
+    std::atomic_bool stopPending {false};
 
     QList<QString> filterDescs;
     QAVFilters filters;
@@ -199,6 +201,7 @@ void QAVPlayerPrivate::resetPendingStatuses()
     qCDebug(lcAVPlayer) << __FUNCTION__ << ":" << pendingMediaStatuses;
     pendingMediaStatuses.clear();
     wait(true);
+    stopPending.store(false, std::memory_order_release);
 }
 
 void QAVPlayerPrivate::setPendingMediaStatus(PendingMediaStatus status)
@@ -206,6 +209,8 @@ void QAVPlayerPrivate::setPendingMediaStatus(PendingMediaStatus status)
     QMutexLocker locker(&stateMutex);
     pendingMediaStatuses.push_back(status);
     qCDebug(lcAVPlayer) << __FUNCTION__ << ":" << mediaStatus << "->" << pendingMediaStatuses;
+    if (status == StoppingMedia)
+        stopPending.store(true, std::memory_order_release);
 }
 
 bool QAVPlayerPrivate::setState(QAVPlayer::State s)
@@ -351,6 +356,7 @@ void QAVPlayerPrivate::terminate()
     dev.reset();
     eof = false;
     startDemuxing = false;
+    stopPending.store(false, std::memory_order_release);
 }
 
 void QAVPlayerPrivate::step(bool hasFrame)
@@ -418,6 +424,7 @@ bool QAVPlayerPrivate::doStep(PendingMediaStatus status, bool hasFrame)
                 result = true;
                 qCDebug(lcAVPlayer) << "Stopped to pos:" << q_ptr->position();
                 Q_EMIT q_ptr->stopped(q_ptr->position());
+                stopPending.store(false, std::memory_order_release);
                 wait(true);
             }
             break;
@@ -781,7 +788,10 @@ void QAVPlayerPrivate::doPlayStep(
                     setPts(frame.pts());
                 if (!flushEvents)
                     flushEvents = true;
-                cb(frame);
+                const bool stopVideoPending = stopPending.load(std::memory_order_acquire)
+                    && queue.mediaType() == AVMEDIA_TYPE_VIDEO;
+                if (!stopVideoPending)
+                    cb(frame);
                 demuxer.onFrameSent(frame);
             }
             filteredFrames.pop_front();

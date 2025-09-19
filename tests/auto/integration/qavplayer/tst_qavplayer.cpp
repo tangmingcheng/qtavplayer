@@ -938,13 +938,32 @@ void tst_QAVPlayer::videoFrame()
     p.setSource(file.absoluteFilePath());
 
     QAVVideoFrame frame;
-    QObject::connect(&p, &QAVPlayer::videoFrame, &p, [&frame](const QAVVideoFrame &f) { frame = f; });
+    int framesCount = 0;
+    int framesAfterStop = 0;
+    bool stopIssued = false;
+    QObject::connect(&p, &QAVPlayer::videoFrame, &p, [&](const QAVVideoFrame &f) {
+        frame = f;
+        if (!f)
+            return;
+        ++framesCount;
+        if (stopIssued)
+            ++framesAfterStop;
+    });
 
     p.play();
     QTRY_VERIFY(!frame.size().isEmpty());
     QTRY_COMPARE(p.mediaStatus(), QAVPlayer::LoadedMedia);
 
+    const int framesBeforeStop = framesCount;
+    stopIssued = true;
+    
     p.stop();
+    QTRY_COMPARE(p.state(), QAVPlayer::StoppedState);
+    QTRY_COMPARE(p.mediaStatus(), QAVPlayer::LoadedMedia);
+
+    QTest::qWait(200);
+    QCOMPARE(framesAfterStop, 0);
+    QCOMPARE(framesCount, framesBeforeStop);
 }
 
 void tst_QAVPlayer::pauseSeekVideo()
