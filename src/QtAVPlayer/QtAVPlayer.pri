@@ -34,6 +34,7 @@ PUBLIC_HEADERS += \
     $$PWD/qaviodevice.h \
     $$PWD/qavaudioformat.h \
     $$PWD/qavpacket.h \
+    $$PWD/qavrealtimevideodecoder.h \
     $$PWD/qavstreamframe.h \
     $$PWD/qavframe.h \
     $$PWD/qavvideoframe.h \
@@ -52,6 +53,7 @@ SOURCES += \
     $$PWD/qavaudiocodec.cpp \
     $$PWD/qavvideocodec.cpp \
     $$PWD/qavsubtitlecodec.cpp \
+    $$PWD/qavrealtimevideodecoder.cpp \
     $$PWD/qavdemuxer.cpp \
     $$PWD/qavmuxer.cpp \
     $$PWD/qavpacket.cpp \
