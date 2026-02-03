@@ -25,6 +25,10 @@
 #include "qavhwdevice_vdpau_p.h"
 #endif
 
+#if defined(QT_AVPLAYER_RKMPP)
+#include "qavhwdevice_rkmpp_p.h"
+#endif
+
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 #include "qavhwdevice_videotoolbox_p.h"
 #endif
@@ -201,6 +205,7 @@ static int setup_video_codec(const QString &inputVideoCodec, AVStream *stream, Q
     QAVDictionaryHolder opts;
     Q_UNUSED(opts);
     static const bool ignoreHW = qEnvironmentVariableIsSet("QT_AVPLAYER_NO_HWDEVICE");
+    const QByteArray requestedHw = qgetenv("QT_AVPLAYER_HWDEVICE").toLower();
 
 #if defined(QT_AVPLAYER_VA_X11) && QT_CONFIG(opengl)
     devices.append(QSharedPointer<QAVHWDevice>(new QAVHWDevice_VAAPI_X11_GLX));
@@ -208,6 +213,10 @@ static int setup_video_codec(const QString &inputVideoCodec, AVStream *stream, Q
 #endif
 #if defined(QT_AVPLAYER_VDPAU)
     devices.append(QSharedPointer<QAVHWDevice>(new QAVHWDevice_VDPAU));
+#endif
+#if defined(QT_AVPLAYER_RKMPP)
+    if (requestedHw.isEmpty() || requestedHw == "rkmpp")
+        devices.append(QSharedPointer<QAVHWDevice>(new QAVHWDevice_RKMPP));
 #endif
 #if defined(QT_AVPLAYER_VA_DRM) && QT_CONFIG(egl)
     devices.append(QSharedPointer<QAVHWDevice>(new QAVHWDevice_VAAPI_DRM_EGL));
