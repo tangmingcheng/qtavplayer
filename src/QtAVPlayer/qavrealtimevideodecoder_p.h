@@ -22,6 +22,7 @@ struct AVStream;
 
 class QAVVideoFrame;
 class QAVCodec;
+class QAVFormatContext;
 
 /*!
  * \internal
@@ -56,7 +57,7 @@ private:
     bool openCodec(const QByteArray &extradata);
     void releaseCodec();
 
-    AVFormatContext *m_formatCtx = nullptr;
+    QSharedPointer<QAVFormatContext> m_formatCtx;
     AVStream *m_stream = nullptr;
     QSharedPointer<QAVCodec> m_codec;
     QAVStream m_qavStream;

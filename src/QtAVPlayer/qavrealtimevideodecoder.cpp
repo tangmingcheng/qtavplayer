@@ -1,4 +1,5 @@
 #include "qavrealtimevideodecoder_p.h"
+#include "qavformatcontext_p.h"
 #include "qavvideocodec_p.h"
 #include "qavpacket.h"
 #include "qavframe.h"
@@ -59,14 +60,15 @@ bool QAVRealTimeVideoDecoder::openCodec(const QByteArray &extradata)
     releaseCodec();
 
     // 创建假的 AVFormatContext 和一个视频流
-    m_formatCtx = avformat_alloc_context();
-    if (!m_formatCtx)
+    m_formatCtx = QAVFormatContext::alloc();
+    if (!m_formatCtx || !m_formatCtx->ctx())
         return false;
 
-    m_stream = avformat_new_stream(m_formatCtx, nullptr);
+    AVFormatContext *fmt = m_formatCtx->ctx();
+
+    m_stream = avformat_new_stream(fmt, nullptr);
     if (!m_stream) {
-        avformat_free_context(m_formatCtx);
-        m_formatCtx = nullptr;
+        m_formatCtx.clear();
         return false;
     }
 
@@ -81,8 +83,7 @@ bool QAVRealTimeVideoDecoder::openCodec(const QByteArray &extradata)
     if (!extradata.isEmpty()) {
         uint8_t *p = (uint8_t *)av_malloc(extradata.size() + AV_INPUT_BUFFER_PADDING_SIZE);
         if (!p) {
-            avformat_free_context(m_formatCtx);
-            m_formatCtx = nullptr;
+            m_formatCtx.clear();
             m_stream = nullptr;
             return false;
         }
@@ -162,8 +163,7 @@ bool QAVRealTimeVideoDecoder::openCodec(const QByteArray &extradata)
         qWarning() << "Could not open video codec for stream";
         if (dict)
             av_dict_free(&dict);
-        avformat_free_context(m_formatCtx);
-        m_formatCtx = nullptr;
+        m_formatCtx.clear();
         m_stream = nullptr;
         m_codec.clear();
         return false;
@@ -181,18 +181,16 @@ void QAVRealTimeVideoDecoder::releaseCodec()
 {
     m_ready = false;
     m_qavStream = QAVStream();
-    m_codec.clear();
+
     // 释放 extradata
-    if (m_stream && m_stream->codecpar) {
-        if (m_stream->codecpar->extradata) {
-            av_freep(&m_stream->codecpar->extradata);
-            m_stream->codecpar->extradata_size = 0;
-        }
+    if (m_stream && m_stream->codecpar && m_stream->codecpar->extradata) {
+        av_freep(&m_stream->codecpar->extradata);
+        m_stream->codecpar->extradata_size = 0;
     }
-    if (m_formatCtx)
-        avformat_free_context(m_formatCtx);
-    m_formatCtx = nullptr;
+
+    m_codec.clear();
     m_stream = nullptr;
+    m_formatCtx.clear();
 }
 
 bool QAVRealTimeVideoDecoder::pushEncodedPacket(const QByteArray &data, bool keyFrame, qint64 pts)
