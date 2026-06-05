@@ -1,12 +1,12 @@
-/*********************************************************
- * Copyright (C) 2020, Val Doroshchuk <valbok@gmail.com> *
- *                                                       *
- * This file is part of QtAVPlayer.                      *
- * Free Qt Media Player based on FFmpeg.                 *
- *********************************************************/
+/***************************************************************
+ * Copyright (C) 2020, 2026, Val Doroshchuk <valbok@gmail.com> *
+ *                                                             *
+ * This file is part of QtAVPlayer.                            *
+ * Free Qt Media Player based on FFmpeg.                       *
+ ***************************************************************/
 
 #include "qavaudioframe.h"
-#include "qavaudioconverter.h"
+#include "qavaudioconverter_p.h"
 #include "qavframe_p.h"
 #include "qavaudiocodec_p.h"
 #include <QDebug>
@@ -89,11 +89,7 @@ QAVAudioFormat QAVAudioFrame::format() const
     if (!c)
         return {};
 
-    auto format = c->audioFormat();
-    if (format.sampleFormat() != QAVAudioFormat::Int32)
-        format.setSampleFormat(QAVAudioFormat::Int32);
-
-    return format;
+    return c->audioFormat();
 }
 
 QByteArray QAVAudioFrame::data() const
@@ -101,7 +97,7 @@ QByteArray QAVAudioFrame::data() const
     auto d = const_cast<QAVAudioFramePrivate *>(reinterpret_cast<QAVAudioFramePrivate *>(d_ptr.get()));
     if (d->data.isEmpty()) {
         d->outAudioFormat = format();
-        d->data = QAVAudioConverter().data(*this);
+        d->data = QAVAudioConverter().data(*this, format());
     }
     return d->data;
 }

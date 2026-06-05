@@ -11,7 +11,9 @@ Special thanks for all the people who had helped this project:
 - fibonacci-matrix <176021117+fibonacci-matrix@users.noreply.github.com>
 - Dniester Amorim <mrfishjr@gmail.com>
 - Gilles Caulier <caulier.gilles@gmail.com>
+- Kioro404 <angelo61br@gmail.com>
 - Maxime Gervais <gervais.maxime@gmail.com>
+- Mr. shengge <guohs01@bwoil.com>
 - Niko Križnik <45733509+niko-kriznik@users.noreply.github.com>
 - Novacer <zhangjack27@gmail.com>
 - kimvnhung <kimvnhung@gmail.com>

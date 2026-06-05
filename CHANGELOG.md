@@ -1,3 +1,70 @@
+2026-05
+-------
+
+- #621 - Fixed seek slider in QML Player example to avoid double seek
+- #620 - Fixed position in QML Player example to avoid jumping
+- #619 - Fixed QAVAudioOutput to resume the audio sink before stopping
+- #616 - Added helper function to return number of seconds based on audio format and num of bytes
+- #613 - Introduced QAVAudioOutput::suspend() and QAVAudioOutput::resume()
+- #612 - Fixed QML Player example to destroy the player first
+- #611 - Fixed QAVAudioOutput to use preferred format when frame's format is not supported by audio device
+- #609 - Added QAVCodec::size(), video dimensions
+- #608 - Added QAVASSRenderer to QML Player example
+- #607 - Added QAVASSRenderer::flush on seek
+- #606 - Introduced QAVASSRenderer with -DQT_AVPLAYER_LIBASS=ON
+- #605 - Added fix for compatible with Qt5.13 and below versions Q_DISABLE_COPY_MOVE - 郭汉盛 <guohs01@bwoil.com>
+- #602 - Fixed qml player example to handle updated position
+- #601 - Introduced shared QAVFormatContext between frames
+
+2026-04
+-------
+
+- #600 - Fixed QAVPlayer to send the last frame before EndOfMedia
+- #596 - Fixed QAVAudioOutput to flush buffer on EOF
+- #594 - Made QAVAudioConverter private
+- #593 - Fixed QAVAudioOutput to handle AV_CODEC_ID_PCM_S24BE frames
+- #570 - Fixed QAVAudioOutput to restart audio-device on format change
+- #591 - Added title to QAVStream
+- #590 - Fixed QAVAudioOutput to clear audio queue when changing audio format
+- #588 - Fixed vdpau to re-use vdpau mixer on next frame
+- #587 - Added copy-free render to qml player example
+- #585 - Fixed QAVVideoFrame to share internal video buffer on copy
+- #584 - Added isMapped to QAVVideoFrame
+- #583 - Added software video codec to qml player example
+- #581 - Added audio and video tracks to qml player example
+- #578 - Recreated audio output if format has changed in QAVAudioOutput
+- #576 - Made QAVAudioOutputDevice private
+- #573 - Added hw_frames_ctx to video input filters.
+- #571 - Added a fix to avoid using texture handle from QVideoFrame if it is already mapped
+- #569 - Fixed memory leak in QAVSubtitleCodec::write
+- #567 - Introduced 'software' video codec hardcoded value to avoid hwdevice context
+- #566 - Introduced subtitles into qml player example
+- #565 - Introduced parsing of text from subtitles by QAVMuxerSubtitleFrames
+- #563 - Introduced qml_player example with controls
+- #564 - Fixed frame_size was not respected for a non-last frame on muxing
+
+2026-03
+-------
+
+- #562 - Moved normalizing of packets pts to demuxer from muxer
+- #561 - Fixed to return EINVAL if a packet is not accepted by a muxer
+- #560 - Exited the example muxer if EOF
+- #559 - Fixed crash during muxing
+- #558 - Added widget_video_opengl to CI
+- #557 - Normalized pts of packets if these packets are based on start time, f.e. retrieved from video device
+- #556 - Introduced support of AV_PIX_FMT_YUYV422 in OpenGL widget
+- #555 - Added support for change aspect ratio mode - Kioro404 <angelo61br@gmail.com>
+
+2026-02
+-------
+
+- #554 - Added support to build libQtAVPlayer for cases when shared lib is more convenient
+
+2025-10
+-------
+
+- #548 - Added rendering cropped frame for MediaCodec to avoid artifacts
+
 2025-10
 -------
 
@@ -30,7 +97,7 @@
 2025-03
 -------
 
-- #524 - Intorduced `QAVMuxerPackets` and `QAVMuxerFrames` muxers.
+- #524 - Introduced `QAVMuxerPackets` and `QAVMuxerFrames` muxers.
          Fixed `QAVPlayer::setOutput` to use `QAVMuxerPackets`.
          Now possible to save the streams to output files without reencoding.
          But if needed, `QAVMuxerFrames` is used to encode frames retrieved after applied filters.

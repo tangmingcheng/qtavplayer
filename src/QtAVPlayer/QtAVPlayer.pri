@@ -1,6 +1,7 @@
 QT += concurrent
 CONFIG += C++1z
 LIBS += -lavcodec -lavformat -lswscale -lavutil -lswresample -lswscale -lavfilter -lavdevice
+DEFINES += QT_BUILD_QTAVPLAYER_LIB
 
 PRIVATE_HEADERS += \
     $$PWD/qavcodec_p.h \
@@ -11,6 +12,7 @@ PRIVATE_HEADERS += \
     $$PWD/qavsubtitlecodec_p.h \
     $$PWD/qavhwdevice_p.h \
     $$PWD/qavdemuxer_p.h \
+    $$PWD/qavmuxer_p_p.h \
     $$PWD/qavstreamframe_p.h \
     $$PWD/qavframe_p.h \
     $$PWD/qavpacketqueue_p.h \
@@ -28,7 +30,10 @@ PRIVATE_HEADERS += \
     $$PWD/qavaudioinputfilter_p.h \ 
     $$PWD/qavvideooutputfilter_p.h \
     $$PWD/qavaudiooutputfilter_p.h \
-    $$PWD/qavfilters_p.h
+    $$PWD/qavfilters_p.h \
+    $$PWD/qavaudioconverter_p.h \
+    $$PWD/qavformatcontext_p.h \
+    $$PWD/qavhwdevice_cuda_p.h \
 
 PUBLIC_HEADERS += \
     $$PWD/qaviodevice.h \
@@ -42,8 +47,10 @@ PUBLIC_HEADERS += \
     $$PWD/qtavplayerglobal.h \
     $$PWD/qavstream.h \
     $$PWD/qavplayer.h \
-    $$PWD/qavaudioconverter.h \
     $$PWD/qavmuxer.h \
+    $$PWD/qavmuxerpackets.h \
+    $$PWD/qavmuxerframes.h \
+    $$PWD/qavmuxersubtitleframes.h \
 
 SOURCES += \
     $$PWD/qavplayer.cpp \
@@ -54,6 +61,9 @@ SOURCES += \
     $$PWD/qavsubtitlecodec.cpp \
     $$PWD/qavdemuxer.cpp \
     $$PWD/qavmuxer.cpp \
+    $$PWD/qavmuxerpackets.cpp \
+    $$PWD/qavmuxerframes.cpp \
+    $$PWD/qavmuxersubtitleframes.cpp \
     $$PWD/qavpacket.cpp \
     $$PWD/qavframe.cpp \
     $$PWD/qavstreamframe.cpp \
@@ -75,13 +85,21 @@ SOURCES += \
     $$PWD/qavstream.cpp \
     $$PWD/qavfilters.cpp \
     $$PWD/qavaudioconverter.cpp \
+    $$PWD/qavformatcontext.cpp \
+    $$PWD/qavhwdevice_cuda.cpp \
 
 contains(DEFINES, QT_AVPLAYER_MULTIMEDIA) {
     QT += multimedia
     # Needed for QAbstractVideoBuffer
     equals(QT_MAJOR_VERSION, 6): QT += multimedia-private
-    HEADERS += $$PWD/qavaudiooutput.h $$PWD/qavaudiooutputdevice.h
+    PUBLIC_HEADERS += $$PWD/qavaudiooutput.h
+    PRIVATE_HEADERS += $$PWD/qavaudiooutputdevice_p.h
     SOURCES += $$PWD/qavaudiooutput.cpp $$PWD/qavaudiooutputdevice.cpp
+}
+
+contains(DEFINES, QT_AVPLAYER_LIBASS) {
+    PUBLIC_HEADERS += $$PWD/qavassrenderer.h
+    SOURCES += $$PWD/qavassrenderer.cpp
 }
 
 contains(DEFINES, QT_AVPLAYER_WIDGET_OPENGL):qtConfig(opengl) {
@@ -111,6 +129,10 @@ contains(DEFINES, QT_AVPLAYER_VDPAU) {
     QT += opengl
     PRIVATE_HEADERS += $$PWD/qavhwdevice_vdpau_p.h
     SOURCES += $$PWD/qavhwdevice_vdpau.cpp
+}
+
+contains(DEFINES, QT_AVPLAYER_LIBASS) {
+    LIBS += -lass
 }
 
 macos|darwin {

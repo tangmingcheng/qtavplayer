@@ -11,6 +11,8 @@
 #include "qavvideoframe.h"
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_0>
+#include <QPointF>
+#include <QRectF>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -24,6 +26,10 @@ public:
     ~QAVWidget_OpenGL();
 
     void setVideoFrame(const QAVVideoFrame &frame);
+    void setAspectRatioMode(Qt::AspectRatioMode mode);
+    void setVideoGeometry(const QRectF &geometry);
+
+    Qt::AspectRatioMode aspectRatioMode() const;
 
 private:
     void initializeGL() override;

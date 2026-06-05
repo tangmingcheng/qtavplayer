@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 struct AVFormatContext;
 class QAVIODevice;
 class QAVPlayerPrivate;
-class QAVPlayer : public QObject
+class Q_AVPLAYER_EXPORT QAVPlayer : public QObject
 {
     Q_OBJECT
     Q_ENUMS(State)
@@ -48,7 +48,8 @@ public:
     {
         NoError,
         ResourceError,
-        FilterError
+        FilterError,
+        BitstreamFilterError
     };
 
     QAVPlayer(QObject *parent = nullptr);
@@ -107,6 +108,12 @@ public:
     QString inputFormat() const;
     void setInputFormat(const QString &format);
 
+    /**
+     * Name of AVCodec to be used for video codec: `ffmpeg -vcodec h264`.
+     * It calls avcodec_find_decoder_by_name() internally.
+     * If `software` is passed, then it forces software decoding,
+     * the same as `QT_AVPLAYER_NO_HWDEVICE` env variable.
+     */
     QString inputVideoCodec() const;
     void setInputVideoCodec(const QString &codec);
     static QStringList supportedVideoCodecs();
@@ -170,9 +177,9 @@ private:
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug operator<<(QDebug, QAVPlayer::State);
-QDebug operator<<(QDebug, QAVPlayer::MediaStatus);
-QDebug operator<<(QDebug, QAVPlayer::Error);
+Q_AVPLAYER_EXPORT QDebug operator<<(QDebug, QAVPlayer::State);
+Q_AVPLAYER_EXPORT QDebug operator<<(QDebug, QAVPlayer::MediaStatus);
+Q_AVPLAYER_EXPORT QDebug operator<<(QDebug, QAVPlayer::Error);
 #endif
 
 Q_DECLARE_METATYPE(QAVPlayer::State)

@@ -7,6 +7,8 @@ option(QT_AVPLAYER_VA_X11 "Enable libva-x11" OFF)
 option(QT_AVPLAYER_VA_DRM "Enable libva-drm" OFF)
 option(QT_AVPLAYER_VDPAU "Enable vdpau" OFF)
 option(QT_AVPLAYER_WIDGET_OPENGL "Enable widget opengl" OFF)
+option(QT_AVPLAYER_LIBASS "Enable libass" OFF)
+option(QT_AVPLAYER_CUDA "Enable CUDA" OFF)
 
 find_library(AVDEVICE_LIBRARY REQUIRED NAMES avdevice)
 find_library(AVCODEC_LIBRARY REQUIRED NAMES avcodec)
@@ -15,6 +17,8 @@ find_library(AVFORMAT_LIBRARY REQUIRED NAMES avformat)
 find_library(AVUTIL_LIBRARY REQUIRED NAMES avutil)
 find_library(SWRESAMPLE_LIBRARY REQUIRED NAMES swresample)
 find_library(SWSCALE_LIBRARY REQUIRED NAMES swscale)
+
+add_compile_definitions(QT_BUILD_QTAVPLAYER_LIB)
 
 set(QtAVPlayer_LIBS 
     ${AVDEVICE_LIBRARY}
@@ -35,6 +39,7 @@ set(QtAVPlayer_PRIVATE_HEADERS
     ${QT_AVPLAYER_DIR}/qavsubtitlecodec_p.h
     ${QT_AVPLAYER_DIR}/qavhwdevice_p.h
     ${QT_AVPLAYER_DIR}/qavdemuxer_p.h
+    ${QT_AVPLAYER_DIR}/qavmuxer_p_p.h
     ${QT_AVPLAYER_DIR}/qavstreamframe_p.h
     ${QT_AVPLAYER_DIR}/qavframe_p.h
     ${QT_AVPLAYER_DIR}/qavpacketqueue_p.h
@@ -54,7 +59,9 @@ set(QtAVPlayer_PRIVATE_HEADERS
     ${QT_AVPLAYER_DIR}/qavaudiooutputfilter_p.h
     ${QT_AVPLAYER_DIR}/qavfilters_p.h
     ${QT_AVPLAYER_DIR}/qavrealtimevideodecoder_p.h
-)
+    ${QT_AVPLAYER_DIR}/qavaudioconverter_p.h
+    ${QT_AVPLAYER_DIR}/qavformatcontext_p.h
+    ${QT_AVPLAYER_DIR}/qavhwdevice_cuda_p.h.h)
 
 set(QtAVPlayer_PUBLIC_HEADERS
     ${QT_AVPLAYER_DIR}/qaviodevice.h
@@ -68,8 +75,10 @@ set(QtAVPlayer_PUBLIC_HEADERS
     ${QT_AVPLAYER_DIR}/qtavplayerglobal.h
     ${QT_AVPLAYER_DIR}/qavstream.h
     ${QT_AVPLAYER_DIR}/qavplayer.h
-    ${QT_AVPLAYER_DIR}/qavaudioconverter.h
     ${QT_AVPLAYER_DIR}/qavmuxer.h
+    ${QT_AVPLAYER_DIR}/qavmuxerpackets.h
+    ${QT_AVPLAYER_DIR}/qavmuxerframes.h
+    ${QT_AVPLAYER_DIR}/qavmuxersubtitleframes.h
 )
 
 set(QtAVPlayer_SOURCES
@@ -81,6 +90,9 @@ set(QtAVPlayer_SOURCES
     ${QT_AVPLAYER_DIR}/qavsubtitlecodec.cpp
     ${QT_AVPLAYER_DIR}/qavdemuxer.cpp
     ${QT_AVPLAYER_DIR}/qavmuxer.cpp
+    ${QT_AVPLAYER_DIR}/qavmuxerpackets.cpp
+    ${QT_AVPLAYER_DIR}/qavmuxerframes.cpp
+    ${QT_AVPLAYER_DIR}/qavmuxersubtitleframes.cpp
     ${QT_AVPLAYER_DIR}/qavpacket.cpp
     ${QT_AVPLAYER_DIR}/qavframe.cpp
     ${QT_AVPLAYER_DIR}/qavstreamframe.cpp
@@ -103,7 +115,8 @@ set(QtAVPlayer_SOURCES
     ${QT_AVPLAYER_DIR}/qavfilters.cpp
     ${QT_AVPLAYER_DIR}/qavaudioconverter.cpp
     ${QT_AVPLAYER_DIR}/qavrealtimevideodecoder.cpp
-)
+    ${QT_AVPLAYER_DIR}/qavformatcontext.cpp
+    ${QT_AVPLAYER_DIR}/qavhwdevice_cuda.cpp)
 
 if(WIN32)
     set(QtAVPlayer_PRIVATE_HEADERS
@@ -154,9 +167,10 @@ if(QT_AVPLAYER_MULTIMEDIA)
     set(QtAVPlayer_PUBLIC_HEADERS
         ${QtAVPlayer_PUBLIC_HEADERS}
         ${QT_AVPLAYER_DIR}/qavaudiooutput.h
-        ${QT_AVPLAYER_DIR}/qavaudiooutputdevice.h
     )
-
+    set(QtAVPlayer_PRIVATE_HEADERS
+        ${QT_AVPLAYER_DIR}/qavaudiooutputdevice_p.h
+    )
     set(QtAVPlayer_SOURCES
         ${QtAVPlayer_SOURCES}
         ${QT_AVPLAYER_DIR}/qavaudiooutput.cpp
@@ -252,7 +266,6 @@ if(QT_AVPLAYER_VDPAU)
         ${QT_AVPLAYER_DIR}/qavhwdevice_vdpau_p.h
     )
 
-
     set(QtAVPlayer_SOURCES
         ${QtAVPlayer_SOURCES}
         ${QT_AVPLAYER_DIR}/qavhwdevice_vdpau.cpp
@@ -270,4 +283,28 @@ if(QT_AVPLAYER_WIDGET_OPENGL)
         ${QtAVPlayer_SOURCES}
         ${QT_AVPLAYER_DIR}/qavwidget_opengl.cpp
     )
+endif()
+
+if(QT_AVPLAYER_LIBASS)
+    message(STATUS "QT_AVPLAYER_LIBASS is defined")
+    find_library(LIBASS_LIBRARY REQUIRED NAMES ass)
+    set(QtAVPlayer_PUBLIC_HEADERS
+        ${QtAVPlayer_PUBLIC_HEADERS}
+        ${QT_AVPLAYER_DIR}/qavassrenderer.h
+    )
+    set(QtAVPlayer_SOURCES
+        ${QtAVPlayer_SOURCES}
+        ${QT_AVPLAYER_DIR}/qavassrenderer.cpp
+    )
+    set(QtAVPlayer_LIBS
+        ${QtAVPlayer_LIBS}
+        ${LIBASS_LIBRARY}
+    )
+    add_definitions(-DQT_AVPLAYER_LIBASS)
+endif()
+
+if(QT_AVPLAYER_CUDA)
+    message(STATUS "QT_AVPLAYER_CUDA is defined")
+    find_library(LIBASS_LIBRARY REQUIRED NAMES cuda)
+    add_definitions(-DQT_AVPLAYER_CUDA)
 endif()
