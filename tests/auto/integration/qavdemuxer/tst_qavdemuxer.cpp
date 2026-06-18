@@ -23,7 +23,6 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 }
 
 #ifndef TEST_DATA_DIR
@@ -60,8 +59,7 @@ private slots:
     void muxerEnqueueFramesFromDev();
     void muxerWritePacketsFromMultiSources();
     void muxerWritePacketsFromDev();
-    void muxerFramesEncoderStreams();
-    void muxerFramesScaleHW();
+    void muxerFramesCodecInfo();
 };
 
 void tst_QAVDemuxer::construction()
@@ -458,10 +456,6 @@ void tst_QAVDemuxer::videoCodecs()
         d.unload();
         d.setInputVideoCodec("h264_cuvid");
         QVERIFY(d.load(file.absoluteFilePath()) >= 0);
-        QVERIFY(!d.currentVideoStreams().isEmpty());
-        auto codec = d.currentVideoStreams()[0].codec();
-        QVERIFY(codec);
-        QCOMPARE(codec->avctx()->pix_fmt, AV_PIX_FMT_CUDA);
     }
 #endif
 }
@@ -851,7 +845,7 @@ void tst_QAVDemuxer::muxerWritePacketsFromDev()
     // ffmpeg -f rawvideo -pix_fmt yuyv422 -s:v 640x480 -r 25 -i output.yuv -c:v libx264 output.mp4
 }
 
-void tst_QAVDemuxer::muxerFramesEncoderStreams()
+void tst_QAVDemuxer::muxerFramesCodecInfo()
 {
     QFileInfo file(testData("colors.mp4"));
     QAVDemuxer d;
@@ -860,22 +854,23 @@ void tst_QAVDemuxer::muxerFramesEncoderStreams()
     QVERIFY(d.load(file.absoluteFilePath()) >= 0);
     QVERIFY(!d.availableVideoStreams().isEmpty());
     QSize size(128, 96);
-    QList<QAVMuxerFrames::EncoderStream> encoderStreams;
     for (auto &s : d.availableVideoStreams()) {
         QVERIFY(s.codec());
         QCOMPARE(s.codec()->size(), QSize(160, 120));
-        QAVMuxerFrames::EncoderStream stream(s);
-        stream.size = size;
-        encoderStreams.push_back(stream);
+        s.codec()->avctx()->width = size.width();
+        s.codec()->avctx()->height = size.height();
+        QVERIFY(s.codec()->size() == size);
+    }
+    for (auto &s : d.availableVideoStreams()) {
+        QCOMPARE(s.codec()->size(), size);
     }
     for (auto &s : d.availableAudioStreams()) {
         QVERIFY(s.codec());
         QVERIFY(s.codec()->size().isEmpty());
-        encoderStreams.push_back(s);
     }
 
     QAVMuxerFrames m;
-    QVERIFY(m.load(encoderStreams, "colors.mkv") >= 0);
+    QVERIFY(m.load(d.availableStreams(), "colors.mkv") >= 0);
 
     QAVPacket p;
     while (d.read(p) >= 0) {
@@ -897,68 +892,6 @@ void tst_QAVDemuxer::muxerFramesEncoderStreams()
         QVERIFY(s.codec());
         QCOMPARE(s.codec()->size(), size);
     }
-}
-
-void tst_QAVDemuxer::muxerFramesScaleHW()
-{
-#if defined(QT_AVPLAYER_CUDA)
-    QFileInfo file(testData("small.mp4"));
-    QAVDemuxer d;
-
-    d.setInputVideoCodec("h264_cuvid");
-    QVERIFY(d.load(file.absoluteFilePath()) >= 0);
-    QVERIFY(!d.currentVideoStreams().isEmpty());
-    auto codec = d.currentVideoStreams()[0].codec();
-    QVERIFY(codec);
-    QCOMPARE(codec->avctx()->pix_fmt, AV_PIX_FMT_CUDA);
-    QVERIFY(!d.availableVideoStreams().isEmpty());
-    QSize size(128, 96);
-    QList<QAVMuxerFrames::EncoderStream> encoderStreams;
-    for (auto &s : d.availableVideoStreams()) {
-        QVERIFY(s.codec());
-        QCOMPARE(s.codec()->size(), QSize(560, 320));
-        // It does not rescale, sets output size only
-        QAVMuxerFrames::EncoderStream stream(s);
-        stream.size = size;
-        encoderStreams.push_back(stream);
-    }
-    for (auto &s : d.availableAudioStreams())
-        encoderStreams.push_back(s);
-
-    QAVMuxerFrames m;
-    // Using software codec
-    QVERIFY(m.load(encoderStreams, "small.mkv") >= 0);
-
-    encoderStreams[0].codec = "notfound";
-    QVERIFY(m.load(encoderStreams, "small.mkv") < 0);
-
-    encoderStreams[0].codec = "h264_nvenc";
-    QVERIFY(m.load(encoderStreams, "small.mkv") >= 0);
-
-    QAVPacket p;
-    while (d.read(p) >= 0) {
-        QList<QAVFrame> fs;
-        QAVDemuxer::decode(p, fs);
-        if (fs.size()) {
-            QVERIFY(fs.size() == 1);
-            auto &f = fs[0];
-            QVERIFY(f);
-            if (f.stream().stream()->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
-                QCOMPARE(AVPixelFormat(f.frame()->format), AV_PIX_FMT_CUDA);
-            m.enqueue(f);
-        }
-    }
-    QTRY_VERIFY(m.size() == 0);
-    QVERIFY(m.flush() >= 0);
-    m.unload();
-    d.unload();
-    QVERIFY(d.load("small.mkv") >= 0);
-    QVERIFY(!d.availableVideoStreams().isEmpty());
-    for (auto &s : d.availableVideoStreams()) {
-        QVERIFY(s.codec());
-        QCOMPARE(s.codec()->size(), size);
-    }
-#endif
 }
 
 QTEST_MAIN(tst_QAVDemuxer)
