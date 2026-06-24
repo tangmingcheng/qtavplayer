@@ -108,6 +108,12 @@ static AVPixelFormat negotiate_pixel_format(AVCodecContext *c, const AVPixelForm
 
     AVPixelFormat pf = !softwareFormats.isEmpty() ? softwareFormats[0] : AV_PIX_FMT_NONE;
     const char *decStr = "software";
+#if defined(Q_OS_LINUX)
+    if (hardwareFormats.contains(AV_PIX_FMT_DRM_PRIME)) {
+        pf = AV_PIX_FMT_DRM_PRIME;
+        decStr = "hardware";
+    } else
+#endif
     if (d->hw_device) {
         for (auto f : hardwareFormats) {
             if (f == d->hw_device->format()) {
